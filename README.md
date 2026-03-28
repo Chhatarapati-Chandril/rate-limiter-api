@@ -15,12 +15,61 @@ This project demonstrates how different algorithms control request flow under lo
 
 ---
 
+## Setup & Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Chhatarapati-Chandril/rate-limiter-api.git
+cd rate-limiter-api
+```
+
+---
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+### 3. Setup Environment Variables
+
+Requires a running Redis instance (local or cloud).
+
+Copy the example file and update values:
+
+```bash
+cp .env.example .env
+```
+
+---
+
+### 4. Start the Server
+
+```bash
+npm run dev
+```
+
+Server will run at: http://localhost:3000
+
+---
+
+### 5. Test the API
+
+```bash
+curl http://localhost:3000/api/v1/fixed-window/health
+```
+
+---
+
 ## Features
 
 * Fixed Window rate limiting (implemented)
 * Redis-backed request tracking
 * IP-based client identification
-* Middleware-driven architecture
+* Middleware-based rate limiting integration
 * Extensible design for additional algorithms
 
 ---
@@ -30,7 +79,7 @@ This project demonstrates how different algorithms control request flow under lo
 ### Flow
 
 ```
-Client Request → Middleware → Redis Counter → Allow / Block (429)
+Client Request → Middleware → Redis Counter → Allow (200) / Block (429)
 ```
 
 ---
