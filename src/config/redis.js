@@ -10,9 +10,6 @@ const redis = new Redis(process.env.REDIS_URL, {
     },
     enableReadyCheck: true,
     lazyConnect: false, // connect immediately
-    // tls: {
-    //   rejectUnauthorized: false
-    // }
 });
 
 // --- Connection lifecycle logs ---

@@ -1,34 +1,36 @@
 import redis from "../config/redis.js";
 
-const attemptFixedWindow = async (key, maxRequests, windowInSeconds) => {
+const attemptFixedWindow = async (baseKey, maxRequests, windowInSeconds) => {
+    const now = Date.now();
+    const windowSize = windowInSeconds * 1000;
+
+    // 1. Calculate aligned window
+    const windowNo = Math.floor(now / windowSize);
+
+    // 2. Create window-specific key
+    const key = `${baseKey}:${windowNo}`;
+
+    // 3. Increment counter
     const requestCount = await redis.incr(key);
 
-    // Not fully atomic: race condition possible between INCR and EXPIRE
+    // 4. aligned TTL
     if (requestCount === 1) {
-        await redis.expire(key, windowInSeconds);
+        const windowEnd = (windowNo + 1) * windowSize;
+        const ttl = Math.ceil((windowEnd - now) / 1000);
+        await redis.expire(key, ttl);
     }
 
-    let ttl = await redis.ttl(key);
-    if (ttl === -1) {
-        // key exists but no expiry - fix it
-        await redis.expire(key, windowInSeconds);
-        ttl = windowInSeconds;
-    } else if (ttl === -2) {
-        // rare race: key expired between INCR and TTL
-        ttl = windowInSeconds;
-    }
-
-    const allowed = requestCount <= maxRequests;
-    const remainingRequests = Math.max(0, maxRequests - requestCount);
-
-    const retryAfter = allowed ? null : ttl;
+    // 5. Calculate reset time (aligned)
+    const windowEnd = (windowNo + 1) * windowSize;
+    const retryAfter = Math.ceil((windowEnd - now) / 1000);
+    const resetTimestamp = Math.floor(windowEnd / 1000);
 
     return {
-        allowed,
-        remainingRequests,
+        allowed: requestCount <= maxRequests,
+        remainingRequests: Math.max(0, maxRequests - requestCount),
         limit: maxRequests,
         retryAfter,
-        ttl,
+        resetTimestamp
     };
 };
 
