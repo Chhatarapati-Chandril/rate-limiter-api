@@ -72,8 +72,15 @@ const attemptSlidingWindowCounter = async (
     // 10. Remaining requests
     const remainingRequests = Math.max(
         0,
-        Math.floor(maxRequests - newEffectiveRequests),
+        Math.ceil(maxRequests - effectiveRequests),
     );
+
+    console.log({
+        effectiveRequests,
+        weight,
+        previousRequests,
+        currentRequests,
+    });
 
     // 11. Retry after (approx)
     let retryAfter;
@@ -85,8 +92,8 @@ const attemptSlidingWindowCounter = async (
     } else {
         retryAfter = Math.ceil(
             (windowSize * (effectiveRequests - maxRequests + 1)) /
-            previousRequests /
-            1000
+                previousRequests /
+                1000,
         );
     }
     const resetTimestamp = Math.floor((now + retryAfter * 1000) / 1000);
@@ -96,7 +103,7 @@ const attemptSlidingWindowCounter = async (
         remainingRequests,
         limit: maxRequests,
         retryAfter,
-        resetTimestamp
+        resetTimestamp,
     };
 };
 
